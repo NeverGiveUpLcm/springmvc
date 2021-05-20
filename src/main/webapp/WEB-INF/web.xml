@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         id="WebApp_ID" version="3.0">
+
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+  <listener>
+    <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+  </listener>
+  <!--spring的配置文件-->
+  <context-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:spring.xml</param-value>
+  </context-param>
+  <!--Springmvc思想有一个前端控制器能拦截所有请求,并智能派发;
+  这个前端控制器是一个servlet,应该在web.xml中配置这个servlet来拦截所有请求
+  -->
+  <servlet>
+    <servlet-name>dispatcherServlet</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <!--servlet启动加载,servlet原本是第一次访问创建对象
+      load-on-startup:服务器启动的时候创建对象,值越小优先级越高,越先创建对象
+    -->
+    <!--springmvc的配置文件-->
+    <init-param>
+      <param-name>contextConfigLocation</param-name>
+      <param-value>classpath:springmvc.xml</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>dispatcherServlet</servlet-name>
+
+    <!--
+        处理*.jsp是tomcat做的事;所有项目的小web.xml都是继承于大web.xml
+        DefaultServlet是tomcat中处理静态资源的(除过jsp和servlet剩下的都是静态资源)
+        index.html属于静态资源,tomcat就会在服务器下找到这个资源并返回
+        我们前端控制器的/相当于禁用掉了tomcat服务器的DefaultServlet
+
+        1)、服务器的大web.xml中有一个DefaultServlet url-pattern = /
+        2)、我们的配置中前端控制的 url-pattern = / 静态资源就会被dispatcherServlet所拦截
+        3)、为什么jsp又能访问？因为我们没有覆盖服务器中的JspServlet的配置
+        4)、/* 直接就是拦截所有请求,包括静态资源;我们写/ 也是为了后来迎合Rest风格的url赋值
+    -->
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+  
+  <filter>
+  <filter-name>HiddenHttpMethodFilter</filter-name>
+  <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+</filter>
+  <filter-mapping>
+    <filter-name>HiddenHttpMethodFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!--配置一个字符编码的filter: 字符编码的filter一定要配置在其他filter之前-->
+  <filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <!--encoding: 指定解决POST请求乱码-->
+    <init-param>
+      <param-name>encoding</param-name>
+      <param-value>UTF-8</param-value>
+    </init-param>
+    <!--forceEncoding: 顺手解决响应乱码-->
+    <init-param>
+      <param-name>forceEncoding</param-name>
+      <param-value>true</param-value>
+    </init-param>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+
+</web-app>
